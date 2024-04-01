@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchUsers, fetchFilteredUsers, fetchFilteredUsersByText } from './actions';
+import { fetchUsers, fetchFilteredUsers, fetchFilteredUsersByText,fetchOneUser } from './actions';
 
 const usersSlice = createSlice({
   name: 'users',
@@ -8,6 +8,7 @@ const usersSlice = createSlice({
     status: 'idle',
     totalUsers: 0,
     error: null,
+    currentUser:{}
   },
   reducers: {
     // Your other reducers
@@ -47,6 +48,17 @@ const usersSlice = createSlice({
         state.totalUsers = action.payload.totalUsers;
       })
       .addCase(fetchFilteredUsersByText.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(fetchOneUser.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchOneUser.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentUser = action.payload;
+      })
+      .addCase(fetchOneUser.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
       })

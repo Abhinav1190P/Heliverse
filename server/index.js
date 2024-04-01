@@ -35,14 +35,18 @@ app.get('/api/users', async (req, res) => {
     const limit = 20;
     const skip = (page - 1) * limit;
     const filters = req.query.filters;
-    console.log(filters)
+    const userId = req.query.id;
+
     try {
         let query = {};
 
+        if (userId) {
+            const user = await User.findById(userId).select('first_name last_name avatar available');
+            return res.json({ user });
+        }
+
         if (filters) {
-
             const parsedFilters = JSON.parse(filters);
-
 
             if (parsedFilters.domain) {
                 query.domain = parsedFilters.domain;
@@ -55,8 +59,7 @@ app.get('/api/users', async (req, res) => {
             }
         }
 
-        const users = await User.find(query).skip(skip).limit(limit);
-
+        const users = await User.find(query).skip(skip).limit(limit).select('first_name last_name avatar available');
         const totalUsers = await User.countDocuments(query);
 
         return res.json({ users, totalUsers });
@@ -65,6 +68,7 @@ app.get('/api/users', async (req, res) => {
         return res.status(500).json({ error: 'Server Error' });
     }
 });
+
 
 
 

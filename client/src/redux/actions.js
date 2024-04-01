@@ -16,7 +16,7 @@ export const fetchUsers = createAsyncThunk('users/fetchUsers', async (currentPag
 export const fetchFilteredUsers = createAsyncThunk('users/fetchFilteredUsers', async (filters) => {
   console.log(filters);
   try {
-    const encodedFilters = encodeURIComponent(JSON.stringify(filters)); 
+    const encodedFilters = encodeURIComponent(JSON.stringify(filters));
     const response = await axios.get(`http://localhost:4000/api/users?filters=${encodedFilters}`);
     return response.data;
   } catch (error) {
@@ -39,3 +39,13 @@ export const fetchFilteredUsersByText = createAsyncThunk('users/fetchFilteredUse
 })
 
 
+export const fetchOneUser = createAsyncThunk('users/fetchOneUser', async (id) => {
+
+  try {
+    const response = await axios.get(`http://localhost:4000/api/users/${id}`)
+    return response.data;
+  } catch (error) {
+    console.log(error)
+    throw error;
+  }
+})
