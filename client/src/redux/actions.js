@@ -49,3 +49,15 @@ export const fetchOneUser = createAsyncThunk('users/fetchOneUser', async (id) =>
     throw error;
   }
 })
+
+
+
+export const updateOneUser = createAsyncThunk('users/updateOneUser', async ({ id, data }) => {
+  try {
+    const response = await axios.put(`http://localhost:4000/api/users/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+});

@@ -1,21 +1,27 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { fetchUsers, fetchFilteredUsers, fetchFilteredUsersByText, fetchOneUser } from './redux/actions';
+import { fetchUsers, fetchFilteredUsers, fetchFilteredUsersByText, fetchOneUser, updateOneUser } from './redux/actions';
 import { useDispatch, useSelector } from 'react-redux';
+import { EditIcon } from '@chakra-ui/icons';
+
 import {
     Box, Flex, VStack, Text, Avatar, Input, Select, Modal,
     ModalOverlay,
     ModalContent,
     ModalHeader,
-    Badge,
     ModalFooter,
     ModalBody,
     useDisclosure,
+    Badge,
     Button,
     ModalCloseButton,
+    Grid,
+    HStack,
 } from '@chakra-ui/react';
 import { debounce } from 'lodash';
+
+
 const PAGE_SIZE = 20;
 
 function PaginationPage() {
@@ -87,6 +93,33 @@ function PaginationPage() {
     const fetchOneUserById = async (id) => {
         dispatch(fetchOneUser(id))
     }
+
+
+    const [editableUser, setEditableUser] = useState(currentUser);
+    const [isEditing, setIsEditing] = useState(false);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setEditableUser(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
+    };
+    useEffect(() => {
+        setEditableUser(currentUser);
+    }, [currentUser]);
+    console.log(currentUser)
+    const handleEditToggle = () => {
+        setIsEditing(prevState => !prevState);
+    };
+
+    const handleSave = () => {
+        const { _id } = currentUser;
+
+        dispatch(updateOneUser({ id:_id, data: editableUser }));
+        setIsEditing(false);
+    };
+
     return (
         <Box w="100vw" h={'100vh'}>
             <Flex alignItems={'center'} justifyContent={'center'} w="100%" h="100%">
@@ -142,32 +175,87 @@ function PaginationPage() {
                                     <ModalCloseButton />
                                     <ModalBody>
                                         {
-                                            currentUser ? (
-                                                <Flex direction="column" alignItems="center">
-                                                    <Avatar src={currentUser.avatar} size="xl" mb={4} />
-                                                    <Text fontSize="2xl" fontWeight="bold">{currentUser.first_name} {currentUser.last_name}</Text>
-                                                    <Text fontSize="lg" color="gray.500" mb={4}>{currentUser.email}</Text>
-                                                    <Flex align="center" mb={4}>
+                                            currentUser ? (<Flex direction="column" alignItems="center">
+                                                <EditIcon onClick={handleEditToggle} cursor="pointer" mb={4} />
+                                                <Avatar src={editableUser.avatar} size="xl" mb={4} />
+                                                <Text fontSize="2xl" fontWeight="bold">
+                                                    {isEditing ? (
+                                                        <HStack>
+                                                            <Input
+                                                                type="text"
+                                                                name="first_name"
+                                                                value={editableUser.first_name}
+                                                                onChange={handleChange}
+                                                                mb={2}
+                                                                style={{ marginBottom: '4px' }}
+                                                            />
+                                                            <Input
+                                                                type="text"
+                                                                name="last_name"
+                                                                value={editableUser.last_name}
+                                                                onChange={handleChange}
+                                                                mb={2}
+                                                                style={{ marginBottom: '4px' }}
+                                                            />
+                                                        </HStack>
+                                                    ) : (
+                                                        `${editableUser.first_name} ${editableUser.last_name}`
+                                                    )}
+                                                </Text>
+                                                <Text fontSize="lg" color="gray.500" mb={4}>
+                                                    {editableUser.email}
+                                                </Text>
+                                                <Flex align="center" mb={4}>
+                                                    {isEditing ? (
+                                                        <Select
+                                                            placeholder="Gender"
+                                                            name="gender"
+                                                            value={editableUser.gender}
+                                                            onChange={handleChange}
+                                                            mr={2}
+                                                        >
+                                                            <option value={'Male'}>Male</option>
+                                                            <option value={'Female'}>Female</option>
+                                                            <option value={'Agender'}>Agender</option>
+                                                            <option value={'Bigender'}>Bigender</option>
+                                                        </Select>
+                                                    ) : (
                                                         <Badge variant="solid" colorScheme="green" mr={2}>
-                                                            {currentUser.gender}
+                                                            {editableUser.gender}
                                                         </Badge>
+                                                    )}
+                                                    {isEditing ? (
+                                                        <Select
+                                                            placeholder="Domain"
+                                                            name="domain"
+                                                            value={editableUser.domain}
+                                                            onChange={handleChange}
+                                                        >
+                                                            <option value="Sales">Sales</option>
+                                                            <option value="Finance">Finance</option>
+                                                            <option value="Marketing">Marketing</option>
+                                                            <option value="IT">IT</option>
+                                                            <option value="Management">Management</option>
+                                                            <option value="UI Designing">UI Designing</option>
+                                                        </Select>
+                                                    ) : (
                                                         <Badge variant="solid" colorScheme="blue">
-                                                            {currentUser.domain}
+                                                            {editableUser.domain}
                                                         </Badge>
-                                                    </Flex>
-                                                    <Text fontSize="lg" mb={4}>
-                                                        Availability: {currentUser.available ? 'Available' : 'Not Available'}
-                                                    </Text>
+                                                    )}
                                                 </Flex>
-                                            ) : (null)
+                                                <Text fontSize="lg" mb={4}>
+                                                    Availability: {editableUser.available ? 'Available' : 'Not Available'}
+                                                </Text>
+                                                {isEditing && (
+                                                    <Flex align="center" mb={4}>
+                                                        <Button colorScheme='blue' onClick={handleSave}>Save</Button>
+                                                    </Flex>
+                                                )}
+                                            </Flex>) : (null)
                                         }
                                     </ModalBody>
-                                    <ModalFooter>
-                                        <Button colorScheme='blue' mr={3} onClick={onClose}>
-                                            Close
-                                        </Button>
-                                        <Button variant='ghost'>Secondary Action</Button>
-                                    </ModalFooter>
+
                                 </ModalContent>
                             </Modal>
                             <Flex justify="space-between">

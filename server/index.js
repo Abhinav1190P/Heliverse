@@ -69,6 +69,25 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
+app.put('/api/users/:id', async (req, res) => {
+    const userId = req.params.id;
+    const userDataToUpdate = req.body;
+
+    try {
+        const updatedUser = await User.findByIdAndUpdate(userId, userDataToUpdate, { new: true });
+
+        if (!updatedUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        return res.json({ user: updatedUser });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Server Error' });
+    }
+});
+
+
 
 
 
