@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+
 export const fetchUsers = createAsyncThunk('users/fetchUsers', async (currentPage) => {
   try {
 
@@ -11,3 +12,30 @@ export const fetchUsers = createAsyncThunk('users/fetchUsers', async (currentPag
     throw error;
   }
 });
+
+export const fetchFilteredUsers = createAsyncThunk('users/fetchFilteredUsers', async (filters) => {
+  console.log(filters);
+  try {
+    const encodedFilters = encodeURIComponent(JSON.stringify(filters)); 
+    const response = await axios.get(`http://localhost:4000/api/users?filters=${encodedFilters}`);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+});
+
+
+export const fetchFilteredUsersByText = createAsyncThunk('users/fetchFilteredUsersByText', async (search) => {
+
+  try {
+    const response = await axios.get(`http://localhost:4000/api/users?search=${search}`)
+    return response.data;
+
+  } catch (error) {
+    console.log(error)
+    throw error;
+  }
+})
+
+

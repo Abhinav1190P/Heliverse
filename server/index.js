@@ -34,16 +34,41 @@ app.get('/api/users', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 20;
     const skip = (page - 1) * limit;
-
+    const filters = req.query.filters;
+    console.log(filters)
     try {
-        const users = await User.find().skip(skip).limit(limit);
-        const totalUsers = await User.countDocuments()
-        res.json({users,totalUsers});
+        let query = {};
+
+        if (filters) {
+
+            const parsedFilters = JSON.parse(filters);
+
+
+            if (parsedFilters.domain) {
+                query.domain = parsedFilters.domain;
+            }
+            if (parsedFilters.gender) {
+                query.gender = parsedFilters.gender;
+            }
+            if (parsedFilters.available !== undefined) {
+                query.available = parsedFilters.available;
+            }
+        }
+
+        const users = await User.find(query).skip(skip).limit(limit);
+
+        const totalUsers = await User.countDocuments(query);
+
+        return res.json({ users, totalUsers });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Server Error' });
+        return res.status(500).json({ error: 'Server Error' });
     }
 });
+
+
+
+
 
 app.get('/api/users/:id', async (req, res) => {
     try {

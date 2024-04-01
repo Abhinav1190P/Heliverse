@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { fetchUsers } from './redux/actions';
+import { fetchUsers, fetchFilteredUsers, fetchFilteredUsersByText } from './redux/actions';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, Flex, VStack, Text, Avatar } from '@chakra-ui/react';
+import { Box, Flex, VStack, Text, Avatar, Input, Select } from '@chakra-ui/react';
+import { debounce } from 'lodash';
 const PAGE_SIZE = 20;
 
 function PaginationPage() {
@@ -12,6 +13,7 @@ function PaginationPage() {
     const users = useSelector((state) => state.users.users);
     const status = useSelector((state) => state.users.status);
     const error = useSelector((state) => state.users.error);
+    const [filters, setFilters] = useState({});
 
     const dispatch = useDispatch()
     console.log(users)
@@ -30,14 +32,77 @@ function PaginationPage() {
 
     const prevPage = () => {
         const prevPageNumber = Math.max(parseInt(page || 1) - 1, 1);
-        // Redirect to previous page
         window.location.href = `/pagination/${prevPageNumber}`;
     };
+
+
+    const [filteredUsers, setFilteredUsers] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedFilters, setSelectedFilters] = useState({
+        domain: [],
+        gender: [],
+        availability: []
+    });
+
+
+    const filterByText = async (value) => {
+        dispatch(fetchFilteredUsersByText(value))
+    }
+
+    const debouncedHandleSearch = debounce((value) => {
+        filterByText(value)
+        setSearchQuery(value);
+    }, 500);
+
+    const handleSearch = (e) => {
+        const { value } = e.target;
+        debouncedHandleSearch(value);
+    };
+    const handleFilterChange = async (type, value) => {
+        setLoading(true);
+        try {
+            const updatedFilters = { ...filters, [type]: value };
+            setFilters(updatedFilters);
+
+            dispatch(fetchFilteredUsers(updatedFilters));
+        } catch (error) {
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    console.log(users)
 
     return (
         <Box w="100vw" h={'100vh'}>
             <Flex alignItems={'center'} justifyContent={'center'} w="100%" h="100%">
                 <VStack spacing={4} align="stretch" maxW="900px" w="100%" p={4}>
+                    <Flex justify="space-between" mb={4} w="100%">
+                        <Input maxW={'400px'} placeholder="Search by name" value={searchQuery} onChange={handleSearch} />
+                        <Flex>
+                            <Select placeholder="Domain" onChange={(e) => handleFilterChange('domain', e.target.value)} mr={2}>
+                                <option value="Sales">Sales</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="IT">IT</option>
+                                <option value="Management">Management</option>
+                                <option value="UI Designing">UI Designing</option>
+
+                            </Select>
+
+                            <Select placeholder="Gender" onChange={(e) => handleFilterChange('gender', e.target.value)} mr={2}>
+                                <option value={'Male'}>Male</option>
+                                <option value={'Female'}>Female</option>
+                                <option value={'Agender'}>Agender</option>
+                                <option value={'Bigender'}>Bigender</option>
+
+                            </Select>
+                            <Select placeholder="Availability" onChange={(e) => handleFilterChange('available', e.target.value)}>
+                                <option value={true}>Yes</option>
+                                <option value={false}>No</option>
+                            </Select>
+                        </Flex>
+                    </Flex>
                     {loading ? (
                         <Text>Loading...</Text>
                     ) : error ? (
@@ -52,7 +117,6 @@ function PaginationPage() {
                                         <Box>
                                             <Text fontSize="12px" fontWeight="bold">{user.first_name} {user.last_name}</Text>
                                             <Text fontSize="sm" color="gray.600">Available: {user.available ? 'Yes' : 'No'}</Text>
-
                                         </Box>
                                     </Flex>
                                 ))}
